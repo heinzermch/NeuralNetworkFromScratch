@@ -17,7 +17,7 @@ Implemented layers:
 
 ## Loss functions
 
-Implemented loss functions
+Implemented loss functions:
 
 * Mean Squared Error
 * Mean Squared Error with Softmax

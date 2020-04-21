@@ -4,12 +4,8 @@ from loss import Loss
 from layer import Layer
 
 
-def assert_near_zero_scalar(a: np.ndarray, tol=1e-3) -> None:
-    assert np.abs(a) < tol, f"Near zero: {a}"
-
-
-def assert_near_zero_tensor(tensor: np.ndarray, tol=1e-3) -> None:
-    assert np.all(np.abs(tensor) < tol), f"Near zero: {tensor}"
+def assert_tensor_near_zero(tensor: np.ndarray, tol=1e-3) -> None:
+    assert np.all(np.abs(tensor) < tol), f"Not zero: {tensor}"
 
 
 def to_numpy(tensor: torch.Tensor) -> np.ndarray:
@@ -61,5 +57,8 @@ class LayerWrapper(Layer):
     def update(self, learning_rate: float) -> None:
         self.layer.update(learning_rate)
 
-    def update_attribute(self, name, value):
+    def update_attribute(self, name: str, value: np.ndarray) -> None:
         setattr(self.layer, name, value)
+
+    def get_attribute(self, name: str) -> np.ndarray:
+        return getattr(self.layer, name)

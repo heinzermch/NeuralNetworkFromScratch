@@ -20,7 +20,7 @@ class Linear(Layer):
         super().__init__()
         self.weight = np.random.randn(input_units, output_units) * np.sqrt(2/512)
         self.bias = np.random.randn(output_units)
-        self.weights_gradient = np.zeros((input_units, output_units))
+        self.weight_gradient = np.zeros((input_units, output_units))
         self.bias_gradient = np.zeros(output_units)
 
     def __call__(self, input: np.ndarray) -> np.ndarray:
@@ -28,12 +28,12 @@ class Linear(Layer):
         return self.output
 
     def backward(self, gradient: np.ndarray) -> np.ndarray:
-        self.weights_gradient = np.sum(self.input[:, :, None] * gradient[:, None, :], axis=0)
+        self.weight_gradient = np.sum(self.input[:, :, None] * gradient[:, None, :], axis=0)
         self.bias_gradient = np.sum(gradient, axis=0)
         return gradient.dot(self.weight.transpose())
 
     def update(self, learning_rate: float) -> None:
-        self.weight -= learning_rate * self.weights_gradient
+        self.weight -= learning_rate * self.weight_gradient
         self.bias -= learning_rate * self.bias_gradient
 
 

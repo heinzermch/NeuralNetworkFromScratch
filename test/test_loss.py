@@ -1,7 +1,7 @@
 from loss import MSE, CrossEntropy, MSES
 import torch
 from torch import nn
-from tool import assert_near_zero_scalar, assert_near_zero_tensor, ClassificationLossWrapper, RegressionLossWrapper, to_numpy
+from tool import assert_tensor_near_zero, ClassificationLossWrapper, RegressionLossWrapper, to_numpy
 
 
 class TorchMSES:
@@ -24,12 +24,12 @@ def test_mses() -> None:
     torch_loss = torch_mse(input, target)
     loss = mses(input, target)
     # Check forward loss
-    assert_near_zero_scalar(to_numpy(torch_loss) - loss)
+    assert_tensor_near_zero(to_numpy(torch_loss) - loss)
     # Check gradient
     torch_loss.backward()
     torch_gradient = input.grad
     gradient = mses.gradient()
-    assert_near_zero_tensor(to_numpy(torch_gradient) - gradient)
+    assert_tensor_near_zero(to_numpy(torch_gradient) - gradient)
 
 
 def test_mse() -> None:
@@ -43,12 +43,12 @@ def test_mse() -> None:
     torch_loss = torch_mse(input, target)
     loss = mse(input, target)
     # Check forward loss
-    assert_near_zero_scalar(to_numpy(torch_loss) - loss)
+    assert_tensor_near_zero(to_numpy(torch_loss) - loss)
     # Check gradient
     torch_loss.backward()
     torch_gradient = input.grad
     gradient = mse.gradient()
-    assert_near_zero_tensor(to_numpy(torch_gradient) - gradient)
+    assert_tensor_near_zero(to_numpy(torch_gradient) - gradient)
 
 
 def test_cross_entropy() -> None:
@@ -61,9 +61,9 @@ def test_cross_entropy() -> None:
     # Forward loss
     loss = cross_entropy(input, target, classes=features)
     torch_loss = torch_cross_entropy(input, target)
-    assert_near_zero_scalar(to_numpy(torch_loss) - loss)
+    assert_tensor_near_zero(to_numpy(torch_loss) - loss)
     # Check gradient
     torch_loss.backward()
     torch_gradient = input.grad
     gradient = cross_entropy.gradient()
-    assert_near_zero_tensor(to_numpy(torch_gradient)-gradient)
+    assert_tensor_near_zero(to_numpy(torch_gradient) - gradient)

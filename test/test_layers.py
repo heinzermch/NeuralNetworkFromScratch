@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from layer import ReLU, Linear, Softmax
 from loss import MSE
-from tool import assert_near_zero_tensor, to_numpy, LayerWrapper, RegressionLossWrapper, assert_near_zero_scalar
+from tool import assert_tensor_near_zero, to_numpy, LayerWrapper, RegressionLossWrapper
 
 
 def test_relu():
@@ -13,7 +13,7 @@ def test_relu():
     relu = LayerWrapper(ReLU)
     # Forward pass
     input = torch.randn(batch_size, features, requires_grad=True)
-    assert_near_zero_tensor(to_numpy(torch_relu(input)) - relu(input))
+    assert_tensor_near_zero(to_numpy(torch_relu(input)) - relu(input))
 
     # Backward pass, losses
     torch_loss = nn.MSELoss()
@@ -23,11 +23,11 @@ def test_relu():
     torch_loss_output = torch_loss(torch_relu(input), target)
     torch_loss_output.backward()
     loss_output = loss(torch.from_numpy(relu(input)), target)
-    assert_near_zero_scalar(loss_output - to_numpy(torch_loss_output))
+    assert_tensor_near_zero(loss_output - to_numpy(torch_loss_output))
     # Backward pass, gradient calculation
     gradient = relu.backward(torch.from_numpy(loss.gradient()))
     torch_gradient = input.grad
-    assert_near_zero_tensor(to_numpy(torch_gradient)-gradient)
+    assert_tensor_near_zero(to_numpy(torch_gradient) - gradient)
 
 
 def test_linear():
@@ -40,7 +40,7 @@ def test_linear():
     # Forward pass, to ensure same operation we copy weight and bias
     linear.update_attribute("weight", to_numpy(torch_linear.weight.T))
     linear.update_attribute("bias", to_numpy(torch_linear.bias))
-    assert_near_zero_tensor(to_numpy(torch_linear(input)) - linear(input))
+    assert_tensor_near_zero(to_numpy(torch_linear(input)) - linear(input))
 
     # Backward pass, losses
     torch_loss = nn.MSELoss()
@@ -50,11 +50,19 @@ def test_linear():
     torch_loss_output = torch_loss(torch_linear(input), target)
     torch_loss_output.backward()
     loss_output = loss(torch.from_numpy(linear(input)), target)
-    assert_near_zero_scalar(loss_output - to_numpy(torch_loss_output))
+    assert_tensor_near_zero(loss_output - to_numpy(torch_loss_output))
     # Backward pass, gradient calculation
     gradient = linear.backward(torch.from_numpy(loss.gradient()))
     torch_gradient = input.grad
-    assert_near_zero_tensor(to_numpy(torch_gradient) - gradient)
+    assert_tensor_near_zero(to_numpy(torch_gradient) - gradient)
+    # Backward pass, weight gradient
+    torch_weight_gradient = torch_linear.weight.grad.T
+    weight_gradient = linear.get_attribute("weight_gradient")
+    assert_tensor_near_zero(to_numpy(torch_weight_gradient) - weight_gradient)
+    # Backward pass, bias gradient
+    torch_bias_gradient = torch_linear.bias.grad
+    bias_gradient = linear.get_attribute("bias_gradient")
+    assert_tensor_near_zero(to_numpy(torch_bias_gradient) - bias_gradient)
 
     # Optimization, gradient update
 
@@ -66,7 +74,7 @@ def test_softmax():
     softmax = LayerWrapper(Softmax)
     # Forward pass
     input = torch.randn(batch_size, features, requires_grad=True)
-    assert_near_zero_tensor(to_numpy(torch_softmax(input))-softmax(input))
+    assert_tensor_near_zero(to_numpy(torch_softmax(input)) - softmax(input))
 
     # Backward pass, losses
     torch_loss = nn.MSELoss()
@@ -76,8 +84,8 @@ def test_softmax():
     torch_loss_output = torch_loss(torch_softmax(input), target)
     torch_loss_output.backward()
     loss_output = loss(torch.from_numpy(softmax(input)), target)
-    assert_near_zero_scalar(loss_output - to_numpy(torch_loss_output))
+    assert_tensor_near_zero(loss_output - to_numpy(torch_loss_output))
     # Backward pass, gradient calculation
     gradient = softmax.backward(torch.from_numpy(loss.gradient()))
     torch_gradient = input.grad
-    assert_near_zero_tensor(to_numpy(torch_gradient) - gradient)
+    assert_tensor_near_zero(to_numpy(torch_gradient) - gradient)
