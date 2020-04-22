@@ -63,7 +63,6 @@ def test_linear():
     torch_bias_gradient = torch_linear.bias.grad
     bias_gradient = linear.get_attribute("bias_gradient")
     assert_tensor_near_zero(to_numpy(torch_bias_gradient) - bias_gradient)
-
     # Optimization, gradient update
 
 

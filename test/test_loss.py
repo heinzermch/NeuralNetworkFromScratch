@@ -1,7 +1,12 @@
 from loss import MSE, CrossEntropy, MSES
 import torch
 from torch import nn
-from tool import assert_tensor_near_zero, ClassificationLossWrapper, RegressionLossWrapper, to_numpy
+from tool import (
+    assert_tensor_near_zero,
+    ClassificationLossWrapper,
+    RegressionLossWrapper,
+    to_numpy,
+)
 
 
 class TorchMSES:

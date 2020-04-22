@@ -18,7 +18,7 @@ class Layer:
 class Linear(Layer):
     def __init__(self, input_units: int, output_units: int):
         super().__init__()
-        self.weight = np.random.randn(input_units, output_units) * np.sqrt(2/512)
+        self.weight = np.random.randn(input_units, output_units) * np.sqrt(2 / 512)
         self.bias = np.random.randn(output_units)
         self.weight_gradient = np.zeros((input_units, output_units))
         self.bias_gradient = np.zeros(output_units)
@@ -28,7 +28,9 @@ class Linear(Layer):
         return self.output
 
     def backward(self, gradient: np.ndarray) -> np.ndarray:
-        self.weight_gradient = np.sum(self.input[:, :, None] * gradient[:, None, :], axis=0)
+        self.weight_gradient = np.sum(
+            self.input[:, :, None] * gradient[:, None, :], axis=0
+        )
         self.bias_gradient = np.sum(gradient, axis=0)
         return gradient.dot(self.weight.transpose())
 
@@ -59,5 +61,7 @@ class Softmax(Layer):
         softmax_horizontal = softmax[:, :, None]
         softmax_vertical = softmax[:, None, :]
         indicator = np.diag([1] * softmax.shape[1])[None, :, :]
-        gradient = gradient[:,:, None] * softmax_vertical * (indicator - softmax_horizontal)
+        gradient = (
+            gradient[:, :, None] * softmax_vertical * (indicator - softmax_horizontal)
+        )
         return np.sum(gradient, axis=1)

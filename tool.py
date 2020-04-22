@@ -29,17 +29,23 @@ class LossWrapper(Loss):
     def gradient(self) -> np.ndarray:
         return self.loss.gradient()
 
-    def __call__(self, input: torch.Tensor, target: torch.Tensor, classes: int = 0) -> np.ndarray:
+    def __call__(
+        self, input: torch.Tensor, target: torch.Tensor, classes: int = 0
+    ) -> np.ndarray:
         pass
 
 
 class RegressionLossWrapper(LossWrapper):
-    def __call__(self, input: torch.Tensor, target: torch.Tensor, classes: int = 0) -> np.ndarray:
+    def __call__(
+        self, input: torch.Tensor, target: torch.Tensor, classes: int = 0
+    ) -> np.ndarray:
         return self.loss(to_numpy(input), to_numpy(target))
 
 
 class ClassificationLossWrapper(LossWrapper):
-    def __call__(self, input: torch.Tensor, target: torch.Tensor, classes: int = 0) -> np.ndarray:
+    def __call__(
+        self, input: torch.Tensor, target: torch.Tensor, classes: int = 0
+    ) -> np.ndarray:
         return self.loss(to_numpy(input), index_to_one_hot(to_numpy(target), classes))
 
 

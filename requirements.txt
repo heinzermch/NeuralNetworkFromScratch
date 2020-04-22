@@ -1,3 +1,4 @@
 fastai
 numpy
 torch
+pre-commit

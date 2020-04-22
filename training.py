@@ -25,8 +25,9 @@ def train_network(learning_rate: float, epochs: int, batch_size: int):
         gradient = loss.gradient()
         model.backward(gradient)
         model.update(learning_rate)
-
-        print(f"Epoch {i+1}: loss {np.round(loss_value, 2)}, accuracy {np.round(accuracy, 2)}")
+        print(
+            f"Epoch {i+1}: loss {np.round(loss_value, 2)}, accuracy {np.round(accuracy, 2)}"
+        )
 
 
 def parse_args():
@@ -70,5 +71,5 @@ if __name__ == "__main__":
     train_network(
         learning_rate=options.learning_rate,
         epochs=options.number_of_epochs,
-        batch_size=options.batch_size
+        batch_size=options.batch_size,
     )
