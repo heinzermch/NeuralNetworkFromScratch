@@ -4,6 +4,20 @@ from loss import Loss
 from layer import Layer
 
 
+def normalize(x: np.ndarray) -> np.ndarray:
+    mean, std = x.mean(), x.std()
+    return (x - mean) / std
+
+
+def normalize_row_wise(x: np.ndarray) -> np.ndarray:
+    means, std = x.mean(axis=1), x.std(axis=1)
+    return (x - means[:, None]) / std[:, None]
+
+
+def calculate_accuracy(output: np.ndarray, target: np.ndarray) -> np.ndarray:
+    return np.mean(np.argmax(output, axis=1) == np.argmax(target, axis=1))
+
+
 def assert_tensor_near_zero(tensor: np.ndarray, tol=1e-3) -> None:
     assert np.all(np.abs(tensor) < tol), f"Not zero: {tensor}"
 

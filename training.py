@@ -1,32 +1,49 @@
 import numpy as np
 import argparse
-from data import load_data
+from data import DataLoader
 from loss import CrossEntropy, MSE, MSES
 from model import Model
 from layer import Linear, ReLU
+from tool import calculate_accuracy
 
 
-def calculate_accuracy(output: np.ndarray, target: np.ndarray) -> np.ndarray:
-    return np.mean(np.argmax(output, axis=1) == np.argmax(target, axis=1))
-
-
-def train_network(learning_rate: float, epochs: int, batch_size: int):
-    x_train, y_train, x_valid, y_valid = load_data()
-
-    input, target = x_train[:100], y_train[:100]
+def train_network(
+    learning_rate: float, epochs: int, batch_size: int, print_every: int = 50
+) -> None:
+    data_loader = DataLoader(batch_size)
 
     loss = CrossEntropy()
     model = Model([Linear(784, 50), ReLU(), Linear(50, 10)])
 
     for i in range(epochs):
-        y = model(input)
-        loss_value = loss(y, target)
-        accuracy = calculate_accuracy(y, target)
-        gradient = loss.gradient()
-        model.backward(gradient)
-        model.update(learning_rate)
+        # One training loop
+        training_data = data_loader.get_training_data()
+        validation_data = data_loader.get_validation_data()
+        for j, batch in enumerate(training_data):
+            input, target = batch
+            y = model(input)
+            loss(y, target)
+            gradient = loss.gradient()
+            model.backward(gradient)
+            model.update(learning_rate)
+            if j % print_every == 0:
+                print(
+                    f"Epoch {i+1}/{epochs}, training iteration {j+1}/{len(training_data)}"
+                )
+
+        accuracy_values = []
+        loss_values = []
+        # One validation loop
+        for j, batch in enumerate(validation_data):
+            input, target = batch
+            y = model(input)
+            loss_value = loss(y, target)
+            accuracy = calculate_accuracy(y, target)
+            accuracy_values.append(accuracy)
+            loss_values.append(loss_value)
+
         print(
-            f"Epoch {i+1}: loss {np.round(loss_value, 2)}, accuracy {np.round(accuracy, 2)}"
+            f"Epoch {i+1}: loss {np.round(np.average(loss_values), 2)}, accuracy {np.round(np.average(accuracy_values), 2)}"
         )
 
 
@@ -35,14 +52,14 @@ def parse_args():
     parser.add_argument(
         "-lr",
         "--learning_rate",
-        default=0.5,
+        default=0.1,
         type=float,
         help="How fast the model will be updated",
     )
     parser.add_argument(
         "-e",
         "--number_of_epochs",
-        default=30,
+        default=10,
         type=int,
         help="How many times shall will the network see the training data",
     )
