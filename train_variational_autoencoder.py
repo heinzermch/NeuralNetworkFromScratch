@@ -1,10 +1,67 @@
 import argparse
+import numpy as np
+from data import DataLoader
+from loss import CrossEntropy, MSE, KLDivergenceStandardNormal
+from model import Model
+from layer import Linear, ReLU, Reparameterization
 
 
 def train_variational_autoencoder(
-    learning_rate: float, epochs: int, batch_size: int, hidden_units: int = 100
+    learning_rate: float,
+    epochs: int,
+    batch_size: int,
+    latent_variables: int = 10,
+    print_every: int = 50,
 ) -> None:
-    print("no failure")
+    data_loader = DataLoader(batch_size)
+
+    image_loss = CrossEntropy()
+    divergence_loss = KLDivergenceStandardNormal()
+    encoder_mean = Model([Linear(784, 50), ReLU(), Linear(50, latent_variables)])
+    encoder_variance = Model([Linear(784, 50), ReLU(), Linear(50, latent_variables)])
+    reparameterization = Reparameterization()
+    decoder = Model([Linear(latent_variables, 50), ReLU(), Linear(50, 784)])
+
+    for i in range(epochs):
+        # One training loop
+        training_data = data_loader.get_training_data()
+
+        for j, batch in enumerate(training_data):
+            input, target = batch
+            # Forward pass
+            mean = encoder_mean(input)
+            variance = encoder_variance(input)
+            z = reparameterization(mean=mean, variance=variance)
+            generated_samples = decoder(z)
+            # Loss calculation
+            loss_mean, loss_variance = divergence_loss(mean, variance)
+            generation_loss = image_loss(generated_samples, input)
+            if j % print_every == 0:
+                print(
+                    f"Epoch {i+1}/{epochs}, training iteration {j+1}/{len(training_data)}"
+                )
+                print(
+                    f"Mean KL loss {np.round(loss_mean, 2)}\t Variance KL loss {np.round(loss_variance, 2)}\t Generation loss {np.round(generation_loss, 2)}"
+                )
+
+            # Backward pass
+            decoder_gradient = image_loss.gradient()
+            decoder_gradient = decoder.backward(decoder_gradient)
+            decoder_mean_gradient, decoder_variance_gradient = reparameterization.backward(
+                decoder_gradient
+            )
+            encoder_mean_gradient, encoder_variance_gradient = (
+                divergence_loss.gradient()
+            )
+            encoder_mean.backward(decoder_mean_gradient + encoder_mean_gradient)
+            encoder_variance.backward(
+                decoder_variance_gradient + encoder_variance_gradient
+            )
+
+            # Update model weights
+            encoder_mean.update(learning_rate)
+            encoder_variance.update(learning_rate)
+            decoder.update(learning_rate)
 
 
 def _validate_args(args: argparse.Namespace) -> None:

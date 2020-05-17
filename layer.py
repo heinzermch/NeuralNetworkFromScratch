@@ -65,3 +65,17 @@ class Softmax(Layer):
             gradient[:, :, None] * softmax_vertical * (indicator - softmax_horizontal)
         )
         return np.sum(gradient, axis=1)
+
+
+class Reparameterization:
+    def __call__(self, mean: np.ndarray, variance: np.ndarray):
+        standard_normal_variables = np.random.standard_normal(
+            np.prod(mean.shape)
+        ).reshape(mean.shape)
+        self.mean, self.variance = mean, variance
+        self.output = mean + variance * standard_normal_variables
+        return self.output
+
+    def backward(self, gradient: np.ndarray):
+        gradient[self.output == 0] = 0
+        return gradient

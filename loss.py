@@ -39,6 +39,21 @@ class MSES(Loss):
         return np.sum(gradients, axis=2)
 
 
+class KLDivergenceStandardNormal(Loss):
+    def __call__(self, means: np.ndarray, variances: np.ndarray) -> np.ndarray:
+        n, k = means.shape
+        self.means, self.variances = means, variances
+        trace = np.sum(variances, axis=1)
+        prod = np.sum(means ** 2, axis=1)
+        det = np.log(np.linalg.det(variances))
+        log_det = np.log(det)
+        loss_per_sample = 1 / 2 * (trace + prod - k - log_det)
+        return np.mean(loss_per_sample)
+
+    def gradient(self) -> np.ndarray:
+        return 2.0 * (self.means - self.variances) / np.prod(self.means.shape)
+
+
 class CrossEntropy(Loss):
     def __init__(self):
         self.softmax = Softmax()
