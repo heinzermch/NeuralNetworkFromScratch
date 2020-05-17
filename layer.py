@@ -1,4 +1,5 @@
 import numpy as np
+import typing
 
 
 class Layer:
@@ -49,6 +50,15 @@ class ReLU(Layer):
         return gradient
 
 
+class Exponential(Layer):
+    def __call__(self, input: np.ndarray):
+        self.output = np.exp(input)
+        return self.output
+
+    def backward(self, gradient: np.ndarray):
+        return np.exp(gradient)
+
+
 class Softmax(Layer):
     def __call__(self, input: np.ndarray) -> np.ndarray:
         input_max = np.max(input, axis=1)[:, None]
@@ -76,6 +86,5 @@ class Reparameterization:
         self.output = mean + variance * standard_normal_variables
         return self.output
 
-    def backward(self, gradient: np.ndarray):
-        gradient[self.output == 0] = 0
-        return gradient
+    def backward(self, gradient: np.ndarray) -> typing.Tuple[np.ndarray, np.ndarray]:
+        return gradient, gradient

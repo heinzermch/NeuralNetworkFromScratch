@@ -10,9 +10,10 @@ class Model:
             x = layer(x)
         return x
 
-    def backward(self, gradient: np.ndarray):
+    def backward(self, gradient: np.ndarray) -> np.ndarray:
         for layer in reversed(self.layers):
             gradient = layer.backward(gradient)
+        return gradient
 
     def update(self, learning_rate: float):
         for layer in self.layers:

@@ -3,7 +3,7 @@ import numpy as np
 from data import DataLoader
 from loss import CrossEntropy, MSE, KLDivergenceStandardNormal
 from model import Model
-from layer import Linear, ReLU, Reparameterization
+from layer import Linear, ReLU, Reparameterization, Exponential
 
 
 def train_variational_autoencoder(
@@ -13,12 +13,16 @@ def train_variational_autoencoder(
     latent_variables: int = 10,
     print_every: int = 50,
 ) -> None:
+    print(
+        f"Training a variational autoencoder for {epochs} epochs with batch size {batch_size}"
+    )
     data_loader = DataLoader(batch_size)
-
     image_loss = CrossEntropy()
     divergence_loss = KLDivergenceStandardNormal()
     encoder_mean = Model([Linear(784, 50), ReLU(), Linear(50, latent_variables)])
-    encoder_variance = Model([Linear(784, 50), ReLU(), Linear(50, latent_variables)])
+    encoder_variance = Model(
+        [Linear(784, 50), ReLU(), Linear(50, latent_variables), Exponential()]
+    )
     reparameterization = Reparameterization()
     decoder = Model([Linear(latent_variables, 50), ReLU(), Linear(50, 784)])
 
@@ -34,14 +38,16 @@ def train_variational_autoencoder(
             z = reparameterization(mean=mean, variance=variance)
             generated_samples = decoder(z)
             # Loss calculation
-            loss_mean, loss_variance = divergence_loss(mean, variance)
+            divergence_loss_value = divergence_loss(mean, variance)
             generation_loss = image_loss(generated_samples, input)
             if j % print_every == 0:
                 print(
-                    f"Epoch {i+1}/{epochs}, training iteration {j+1}/{len(training_data)}"
+                    f"Epoch {i+1}/{epochs}, "
+                    f"training iteration {j+1}/{len(training_data)}"
                 )
                 print(
-                    f"Mean KL loss {np.round(loss_mean, 2)}\t Variance KL loss {np.round(loss_variance, 2)}\t Generation loss {np.round(generation_loss, 2)}"
+                    f"KL loss {np.round(divergence_loss_value, 2)}\t"
+                    f"Generation loss {np.round(generation_loss, 2)}"
                 )
 
             # Backward pass
@@ -59,9 +65,9 @@ def train_variational_autoencoder(
             )
 
             # Update model weights
-            encoder_mean.update(learning_rate)
-            encoder_variance.update(learning_rate)
-            decoder.update(learning_rate)
+            # encoder_mean.update(learning_rate)
+            # encoder_variance.update(learning_rate)
+            # decoder.update(learning_rate)
 
 
 def _validate_args(args: argparse.Namespace) -> None:
@@ -90,7 +96,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-bs",
         "--batch_size",
-        default=100,
+        default=5,
         type=int,
         help="On how many examples should be trained on per pass",
     )
